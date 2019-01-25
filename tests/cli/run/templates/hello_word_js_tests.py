@@ -55,8 +55,8 @@ class TnsRunJSTests(TnsTest):
 
 
 class RunAndroidJSTests(TnsRunJSTests):
-    def test_100_run_android(self):
-        sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu)
+    # def test_100_run_android(self):
+    #     sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu)
 
     def test_200_run_android_bundle(self):
         sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu, bundle=True)
