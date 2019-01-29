@@ -55,11 +55,14 @@ class TnsRunJSTests(TnsTest):
 
 
 class RunAndroidJSTests(TnsRunJSTests):
-    # def test_100_run_android(self):
-    #     sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu)
+    def test_100_run_android(self):
+        sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu)
 
     def test_200_run_android_bundle(self):
         sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu, bundle=True)
+
+    def test_205_run_android_hmr(self):
+        sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu, hmr=True)
 
     def test_210_run_android_bundle_hmr(self):
         sync_hello_world_js(self.app_name, Platform.ANDROID, self.emu, bundle=True, hmr=True)
@@ -85,6 +88,9 @@ class RunIOSJSTests(TnsRunJSTests):
 
     def test_200_run_ios_bundle(self):
         sync_hello_world_js(self.app_name, Platform.IOS, self.sim, bundle=True)
+
+    def test_205_run_ios_hmr(self):
+        sync_hello_world_js(self.app_name, Platform.IOS, self.sim, hmr=True)
 
     def test_210_run_ios_bundle_hmr(self):
         sync_hello_world_js(self.app_name, Platform.IOS, self.sim, bundle=True, hmr=True)

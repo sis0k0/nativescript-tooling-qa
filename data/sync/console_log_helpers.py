@@ -13,10 +13,22 @@ class ConsoleLog(object):
     js = 'main-view-model.js'
     xml = 'main-page.xml'
     css = 'app.css'
+
+    #ios --bundle
     transf_bundle = 'Successfully transferred bundle.js on device'
     transf_package = 'Successfully transferred package.json on device'
     transf_starter = 'Successfully transferred starter.js on device'
     transf_vendor = 'Successfully transferred vendor.js on device'
+    #android --bundle
+    transf_all_files_ios = 'Successfully transferred all files on device'
+
+
+    #hmr
+    hmr_module = 'HMR: Hot Module Replacement Enabled. Waiting for signal.'
+    hmr_update = 'HMR: Checking for updates to the bundle with hmr hash'
+    main_page = './main-page.js'
+    hmr_success = 'HMR: Successfully applied update with hmr hash'
+    hmr_transf = 'Successfully transferred bundle.'
 
     #js project with --bundle
     webpack = 'Webpack compilation complete'

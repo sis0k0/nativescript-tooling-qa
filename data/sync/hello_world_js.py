@@ -5,7 +5,9 @@ Sync changes on JS/TS project helper.
 import os
 
 from core.enums.app_type import AppType
+from core.enums.platform_type import Platform
 from core.settings import Settings
+from core.settings.Settings import Android, IOS
 from core.utils.device.device import Device
 from core.utils.file_utils import File
 from core.utils.wait import Wait
@@ -42,6 +44,7 @@ def __verify_snapshot_skipped(snapshot, result):
         assert skip_snapshot, 'Not message that snapshot is skipped.'
         assert msg in File.read(result.log_file), 'No message that snapshot is NOT available on Windows.'
 
+
 def __sync_hello_world_js_ts(app_type, app_name, platform, device,
                              bundle=False, hmr=False, uglify=False, aot=False, snapshot=False):
     if app_type == AppType.JS:
@@ -57,17 +60,7 @@ def __sync_hello_world_js_ts(app_type, app_name, platform, device,
     result = Tns.run(app_name=app_name, platform=platform, emulator=True, wait=False,
                      bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.proj_success_build, ConsoleLog.success_installed,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
-
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False \
-            or bundle is True and hmr is False and uglify is False and aot is True and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
-                   ConsoleLog.bundle, ConsoleLog.package, ConsoleLog.starter, ConsoleLog.vendor,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __initial_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result, platform=platform)
 
     __verify_snapshot_skipped(snapshot, result)
 
@@ -83,28 +76,40 @@ def __sync_hello_world_js_ts(app_type, app_name, platform, device,
     Sync.replace(app_name=app_name, change_set=js_change)
     device.wait_for_text(text=js_change.new_text)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.success_transffer, ConsoleLog.js, ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __changes_js_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.js, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update, ConsoleLog.main_page,
+    #                ConsoleLog.js, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
     # Edit XML file and verify changes are applied
     Sync.replace(app_name=app_name, change_set=xml_change)
     device.wait_for_text(text=xml_change.new_text)
     device.wait_for_text(text=js_change.new_text)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.success_transffer, ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __changes_xml_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update, ConsoleLog.xml,
+    #                ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
     # Edit CSS file and verify changes are applied
     Sync.replace(app_name=app_name, change_set=css_change)
@@ -112,55 +117,181 @@ def __sync_hello_world_js_ts(app_type, app_name, platform, device,
     device.wait_for_text(text=xml_change.new_text)
     device.wait_for_text(text=js_change.new_text)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.success_transffer, ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __changes_css_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update,
+    #                ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
     # Revert all the changes
     Sync.revert(app_name=app_name, change_set=js_change)
     device.wait_for_text(text=js_change.old_text)
     device.wait_for_text(text=xml_change.new_text)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.success_transffer, ConsoleLog.js, ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __changes_js_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.js, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update, ConsoleLog.main_page,
+    #                ConsoleLog.js, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
     Sync.revert(app_name=app_name, change_set=xml_change)
     device.wait_for_text(text=xml_change.old_text)
     device.wait_for_text(text=js_change.old_text)
 
-    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.success_transffer, ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    __changes_xml_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
-        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update,
+    #                ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
     Sync.revert(app_name=app_name, change_set=css_change)
     device.wait_for_color(color=Colors.LIGHT_BLUE, pixel_count=blue_count)
     device.wait_for_text(text=xml_change.old_text)
     device.wait_for_text(text=js_change.old_text)
 
+    __changes_css_logs(bundle=bundle, hmr=hmr, uglify=uglify, aot=aot, snapshot=snapshot, result=result)
+
+    # if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.success_transffer, ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update,
+    #                ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+    #
+    # if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
+    #     strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+    #     TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    # Assert final and initial states are same
+    device.screen_match(expected_image=initial_state, tolerance=1.0, timeout=30)
+
+
+def __initial_logs(bundle, hmr, uglify, aot, snapshot, result, platform):
+    # all is False
+    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+        if platform == Platform.IOS:
+            strings = [ConsoleLog.proj_success_build, ConsoleLog.success_installed, ConsoleLog.transf_all_files_ios,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+        if platform == Platform.ANDROID:
+            strings = [ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+            assert ConsoleLog.transf_all_files_ios not in result.log_file
+
+    # bundle is True
+    if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                   ConsoleLog.restart_app, ConsoleLog.success_sync, ConsoleLog.hmr_module]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    # bundle is true / bundle is true and aot is true
+    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False \
+            or bundle is True and hmr is False and uglify is False and aot is True and snapshot is False:
+        if platform == Platform.ANDROID:
+            strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+            assert ConsoleLog.transf_vendor not in result.log_file
+            assert ConsoleLog.transf_bundle not in result.log_file
+            assert ConsoleLog.transf_package not in result.log_file
+            assert ConsoleLog.transf_starter not in result.log_file
+        if platform == Platform.IOS:
+            strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                       ConsoleLog.bundle, ConsoleLog.package, ConsoleLog.starter, ConsoleLog.vendor,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    # bundle is true AND aot is true AND uglify is true
+    if bundle is True and hmr is False and uglify is True and aot is True and snapshot is False :
+        if platform == Platform.ANDROID:
+            strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+            assert ConsoleLog.transf_vendor not in result.log_file
+            assert ConsoleLog.transf_bundle not in result.log_file
+            assert ConsoleLog.transf_package not in result.log_file
+            assert ConsoleLog.transf_starter not in result.log_file
+        if platform == Platform.IOS:
+            strings = [ConsoleLog.webpack, ConsoleLog.proj_success_build, ConsoleLog.success_installed,
+                       ConsoleLog.bundle, ConsoleLog.package, ConsoleLog.starter, ConsoleLog.vendor,
+                       ConsoleLog.restart_app, ConsoleLog.success_sync]
+            TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+def __changes_js_logs(bundle, hmr, uglify, aot, snapshot, result):
+    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.success_transffer, ConsoleLog.js, ConsoleLog.restart_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update, ConsoleLog.main_page,
+                   ConsoleLog.js, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    # bundle is true AND aot is true
+    if bundle is True and hmr is False and uglify is False and aot is True and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    # bundle is true AND aot is true AND uglify is true
+    if bundle is True and hmr is False and uglify is True and aot is True and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.transf_vendor,
+                   ConsoleLog.restart_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+def __changes_xml_logs(bundle, hmr, uglify, aot, snapshot, result):
+    if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.success_transffer, ConsoleLog.xml, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update, ConsoleLog.xml,
+                   ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+    if bundle is True and hmr is False and uglify is False and aot is True and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
+
+def __changes_css_logs(bundle, hmr, uglify, aot, snapshot, result):
     if bundle is False and hmr is False and uglify is False and aot is False and snapshot is False:
         strings = [ConsoleLog.success_transffer, ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.success_sync]
         TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
-    if bundle is True and hmr is False and uglify is False and aot is False and snapshot is False:
-        strings = [ConsoleLog.webpack, ConsoleLog.success_transffer, ConsoleLog.bundle,
-                   ConsoleLog.restart_app, ConsoleLog.success_sync]
+    if bundle is False and hmr is True and uglify is False and aot is False and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.hmr_transf, ConsoleLog.hmr_update,
+                   ConsoleLog.css, ConsoleLog.refreshing_app, ConsoleLog.hmr_success, ConsoleLog.success_sync]
         TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
 
-    # Assert final and initial states are same
-    device.screen_match(expected_image=initial_state, tolerance=1.0, timeout=30)
+    if bundle is True and hmr is False and uglify is False and aot is True and snapshot is False:
+        strings = [ConsoleLog.webpack, ConsoleLog.transf_bundle, ConsoleLog.restart_app, ConsoleLog.success_sync]
+        TnsHelpers.wait_for_log(log_file=result.log_file, string_list=strings)
