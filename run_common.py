@@ -34,7 +34,7 @@ def __cleanup():
     Gradle.cache_clean()
 
 
-def __get_templates(branch='master'):
+def __get_templates(branch='release'):
     """
     Clone hello-world templates and pack them as local npm packages.
     :param branch: Branch of https://github.com/NativeScript/nativescript-app-templates
