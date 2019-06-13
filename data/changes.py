@@ -74,15 +74,18 @@ class Changes(object):
                                 old_value='</Page>', new_value='</Page')
 
     class MasterDetailNG(object):
-        TS = ChangeSet(file_path=os.path.join('src', 'app', 'cars', 'shared', 'car.model.ts'),
+        TS = ChangeSet(file_name='car.model.ts',
+                       file_path=os.path.join('src', 'app', 'cars', 'shared', 'car.model.ts'),
                        old_value='options.name;', new_value='"SyncTSTest";',
                        old_text='Ford KA', new_text='SyncTSTest')
-        HTML = ChangeSet(file_path=os.path.join('src', 'app', 'cars', 'car-list.component.html'),
+        HTML = ChangeSet(file_name='car-list.component.html',
+                         file_path=os.path.join('src', 'app', 'cars', 'car-list.component.html'),
                          old_value='Browse', new_value='Best Car Ever!',
                          old_text='Browse', new_text='Best Car Ever!')
 
         # This change should make title of cars pink
-        SCSS_ROOT_COMMON = ChangeSet(file_path=os.path.join('src', '_app-common.scss'),
+        SCSS_ROOT_COMMON = ChangeSet(file_name='_app-common.scss',
+                                     file_path=os.path.join('src', '_app-common.scss'),
                                      old_value='$accent-dark;', new_value='pink;',
                                      old_color=Colors.ACCENT_DARK, new_color=Colors.PINK)
 
